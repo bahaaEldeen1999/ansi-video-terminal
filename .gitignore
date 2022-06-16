@@ -1,5 +1,6 @@
 frames/*
-*.mp4
+v*.mp4
+test*.mp4
 *.out
 test.png
 v*/*
