@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     std::string folder = "frames";
     if (argc == 2)
         folder = argv[1];
-    //std::vector<unsigned char> image; // the raw pixels
+    // std::vector<unsigned char> image; // the raw pixels
     unsigned width, height;
     std::vector<std::vector<unsigned char>> images;
     std::vector<std::vector<unsigned>> dims;
@@ -29,29 +29,65 @@ int main(int argc, char **argv)
     std::string fname = folder + "/frame";
     printf("\x1b[?25l");
     int waitInterval = 1000 / FPS;
-    while(!error){
-        images.push_back(std::vector<unsigned char>());
-        dims.push_back(std::vector<unsigned>(2,0));
-         error = lodepng::decode(images[count], dims[count][1],  dims[count][0], fname + std::to_string(count) + ".png");
-         count++;
-          printf("\x1B[2J\x1B[H");
-         printf("loading %d\n",count);
-         
+    while (!error)
+    {
+        // images.push_back(std::vector<unsigned char>());
+        // dims.push_back(std::vector<unsigned>(2, 0));
+        std::vector<unsigned char> image;
+        std::vector<unsigned> dim(2, 0);
+        auto start = std::chrono::system_clock::now();
+        // std::cout << "before loading " << (fname + std::to_string(count) + ".png")
+        //           << "\n";
+        error = lodepng::decode(image, dim[1], dim[0], fname + std::to_string(count) + ".png");
+        // std::cout << "here after load\n";
+        //  int t = count;
+        height = dim[0];
+        width = dim[1];
+        unsigned int aspectH = height / TERMINAL_H;
+        unsigned int aspectW = width / TERMINAL_W;
+        std::string line = "";
+        for (int i = 0; i < height * 4; i += 4 * aspectH)
+        {
+            for (int j = 0; j < width * 4; j += 4 * aspectW)
+            {
+                // R G B (A -> ignored)
+                unsigned int r = image[j + i * width];
+                unsigned int g = image[j + i * width + 1];
+                unsigned int b = image[j + i * width + 2];
+                // printf("\x1b[48;2;%d;%d;%dm \x1b[0m", r, g, b);
+
+                line += "\x1b[48;2;" + std::to_string(r) + ";" + std::to_string(g) + ";" + std::to_string(b) + "m \x1b[0m";
+                // printf("i %d j %d indx %d\n",i,j,j+i*width);
+            }
+            line += "\n";
+            //   printf("\n");
+        }
+        printf(line.c_str());
+        std::chrono::duration<double> interval = std::chrono::system_clock::now() - start;
+        int msec = interval.count() * 1000;
+        //  printf("wait %d %d\n",waitInterval,msec);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(std::max((int)1, waitInterval - msec)));
+        printf("\x1B[2J\x1B[H");
+        count++;
+        //  printf("\x1B[2J\x1B[H");
+        //  printf("loading %d\n", count);
     }
-    //printf("size %d\n",images.size());
-    for(int t=0;t<images.size();t++)
+    // printf("size %d\n",images.size());
+    /*
+    for (int t = 0; t < images.size(); t++)
     {
         auto start = std::chrono::system_clock::now();
         // write(1,"hi",2);
-       printf("\x1B[2J\x1B[H");
-        
-       // image.clear();
+        printf("\x1B[2J\x1B[H");
+
+        // image.clear();
         // printf("count %d\n",count);
         // for (int i = 0; i < TERMINAL_H + 10; i++)
         //     printf("\n");
         // system("clear");
 
-       // error = lodepng::decode(image, width, height, fname + std::to_string(count) + ".png");
+        // error = lodepng::decode(image, width, height, fname + std::to_string(count) + ".png");
 
         // if there's an error, display it
         // if (error)
@@ -64,7 +100,7 @@ int main(int argc, char **argv)
         // printf("height %d width %d sizeOfVector %d w*h*4 %d\n",height,width,image.size(),height*width*4);
 
         // convet from hxw to thxtw
-        //char screen[TERMINAL_H * TERMINAL_W * 3];
+        // char screen[TERMINAL_H * TERMINAL_W * 3];
         height = dims[t][0];
         width = dims[t][1];
         unsigned int aspectH = height / TERMINAL_H;
@@ -84,13 +120,13 @@ int main(int argc, char **argv)
         }
         std::chrono::duration<double> interval = std::chrono::system_clock::now() - start;
         int msec = interval.count() * 1000;
-        //printf("wait %d %d\n",waitInterval,msec);
+        // printf("wait %d %d\n",waitInterval,msec);
 
-       std::this_thread::sleep_for(std::chrono::milliseconds(std::max((int)1, waitInterval - msec)));
-        //std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        //count++;
+        std::this_thread::sleep_for(std::chrono::milliseconds(std::max((int)1, waitInterval - msec)));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        // count++;
     }
-
+*/
     return 0;
 }
 
